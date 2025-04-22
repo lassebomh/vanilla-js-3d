@@ -72,10 +72,10 @@ function render_to_canvas(ctx, points, view_projection, light_direction_inv) {
         if (!bc) continue;
 
         const pos = (ctx.canvas.width * y + x) * 4;
-        image.data[pos] = r * light;
-        image.data[pos + 1] = g * light;
-        image.data[pos + 2] = b * light;
-        image.data[pos + 3] = 255;
+        image.data[pos] += r * light;
+        image.data[pos + 1] += g * light;
+        image.data[pos + 2] += b * light;
+        image.data[pos + 3] += 255;
       }
     }
   }
@@ -89,12 +89,12 @@ function render_to_canvas(ctx, points, view_projection, light_direction_inv) {
 function setup_canvas(ctx) {
   ctx.canvas.style.imageRendering = "pixelated";
 
-  const downscale = 1;
+  const downscale = 4;
 
   ctx.canvas.width = ctx.canvas.clientWidth / downscale;
   ctx.canvas.height = ctx.canvas.clientHeight / downscale;
 
-  return mat.perspective_3d(deg_to_rad(20), ctx.canvas.width / ctx.canvas.height, 1, 2000);
+  return mat.perspective_3d(deg_to_rad(10), ctx.canvas.width / ctx.canvas.height, 1, 2000);
 }
 
 const ctxs = [
@@ -110,6 +110,26 @@ const projections = ctxs.map(setup_canvas);
 let points = [];
 
 points.push(...model_lhb());
+
+/**
+ * @param {number} a
+ * @param {number} b
+ */
+function swap(a, b) {
+  [points[a * 3], points[a * 3 + 1], points[a * 3 + 2], points[b * 3], points[b * 3 + 1], points[b * 3 + 2]] = [
+    points[b * 3],
+    points[b * 3 + 1],
+    points[b * 3 + 2],
+    points[a * 3],
+    points[a * 3 + 1],
+    points[a * 3 + 2],
+  ];
+}
+
+for (let i = 0; i < points.length / 3 - 40; i++) {
+  const other = Math.floor(Math.random() * 40);
+  swap(i, i + other);
+}
 
 const light_direction = mat.forward.mul(mat.x_rotation_3d(0.9)).mul(mat.y_rotation_3d(0.4));
 const light_direction_inv = light_direction.neg();
@@ -127,7 +147,7 @@ function frame(t) {
     const ctx = ctxs[i];
     const projection = projections[i];
 
-    let camera = mat.translation_3d(0, 0, 5);
+    let camera = mat.translation_3d(0, 0, 10);
 
     if (i == 1) {
       camera = camera.mul(mat.y_rotation_3d(Math.PI / 2));
@@ -136,13 +156,15 @@ function frame(t) {
       camera = camera.mul(mat.x_rotation_3d(Math.PI / 2));
     }
     if (i == 0) {
-      camera = camera.mul(mat.y_rotation_3d(0.3).mul(mat.x_rotation_3d(Math.cos(t / 500) / 9)));
+      camera = camera.mul(mat.y_rotation_3d(0.5).mul(mat.x_rotation_3d(-0.4)));
     }
 
     let view = camera.inv();
     let view_projection = view.mul(projection);
 
-    render_to_canvas(ctx, points, view_projection, light_direction_inv);
+    const points_slice = points.slice(0, 3 * Math.floor(t / 2));
+
+    render_to_canvas(ctx, points_slice, view_projection, light_direction_inv);
   }
 
   requestAnimationFrame(frame);
