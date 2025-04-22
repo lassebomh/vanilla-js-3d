@@ -4,7 +4,7 @@ import { assert, never } from "./utils.js";
  * @template {number} H
  * @template {number} W
  */
-export class Matrix extends Float32Array {
+export class mat extends Float32Array {
   constructor(/** @type {H} */ height, /** @type {W} */ width, /** @type {ArrayLike<number> | undefined} */ array) {
     super(array ?? new Float32Array(width * height).fill(0));
     if (array && width * height !== array.length) never();
@@ -12,17 +12,37 @@ export class Matrix extends Float32Array {
     this.width = width;
   }
 
+  static down = new mat(1, 4, [0, 1, 0, 0]);
+  static up = new mat(1, 4, [0, -1, 0, 0]);
+  static forward = new mat(1, 4, [0, 0, 1, 0]);
+
+  get x() {
+    return this[0];
+  }
+
+  get y() {
+    return this[1];
+  }
+
+  get z() {
+    return this[2];
+  }
+
+  get w() {
+    return this[3];
+  }
+
   copy() {
-    return new Matrix(this.width, this.height, this);
+    return new mat(this.height, this.width, this);
   }
 
   /**
    * @template {number} T
    * @param {T} size
-   * @returns {Matrix<T, T>}
+   * @returns {mat<T, T>}
    */
   static identity(size) {
-    const out = new Matrix(size, size);
+    const out = new mat(size, size);
     for (let i = 0; i < size; i++) {
       out[i + i * size] = 1;
     }
@@ -31,11 +51,11 @@ export class Matrix extends Float32Array {
 
   /**
    * @template {number} T
-   * @param {Matrix<W, T>} other
-   * @returns {Matrix<H, T>}
+   * @param {mat<W, T>} other
+   * @returns {mat<H, T>}
    */
   mul(other) {
-    const out = new Matrix(this.height, other.width);
+    const out = new mat(this.height, other.width);
 
     for (let y = 0; y < out.height; y++) {
       for (let x = 0; x < out.width; x++) {
@@ -119,26 +139,56 @@ export class Matrix extends Float32Array {
       d * (tmp_22 * m22 + tmp_16 * m02 + tmp_21 * m12 - (tmp_20 * m12 + tmp_23 * m22 + tmp_17 * m02)),
     ];
 
-    return new Matrix(this.height, this.width, array);
+    return new mat(this.height, this.width, array);
   }
 
   /**
-   * @param {Matrix<H, W>} other
-   * @returns {Matrix<H, W>}
+   * @param {mat<H, W>} other
+   * @returns {mat<H, W>}
    */
   add(other) {
-    return new Matrix(
+    return new mat(
       this.height,
       this.width,
-      this.map((v, i) => v + other[i])
+      new Float32Array(this).map((v, i) => v + other[i])
     );
   }
+
   /**
-   * @param {Matrix<H, W>} other
-   * @returns {Matrix<H, W>}
+   * @returns {mat<H, W>}
+   */
+  neg() {
+    return new mat(
+      this.height,
+      this.width,
+      new Float32Array(this).map((v) => -v)
+    );
+  }
+
+  normalize() {
+    const dist = Math.hypot(this[0], this[1], this[2]);
+
+    return this.div(dist);
+  }
+
+  /**
+   * @param {number} value
+   * @returns {mat<H, W>}
+   */
+  div(value) {
+    return new mat(
+      this.height,
+      this.width,
+      new Float32Array(this).map((v) => v / value)
+    );
+  }
+
+  /**
+   * @param {mat<H, W>} other
+   * @returns {mat<H, W>}
    */
   sub(other) {
-    return new Matrix(
+    return new mat(
       this.height,
       this.width,
       Array.from(this).map((v, i) => v - other[i])
@@ -149,42 +199,71 @@ export class Matrix extends Float32Array {
    * @returns {W extends H ? number : never}
    */
   det() {
-    // @ts-ignore
-    if (this.width !== this.height) never();
+    never();
+    // // @ts-ignore
+    // if (this.width !== this.height) never();
 
-    if (this.width === 2) {
-      return /** @type {*} */ (this[0] * this[3] - this[1] * this[2]);
-    } else {
-      let out = 0;
+    // if (this.width === 2) {
+    //   return /** @type {*} */ (this[0] * this[3] - this[1] * this[2]);
+    // } else {
+    //   let out = 0;
 
-      for (let col = 0; col < this.width; col++) {
-        const inner = new Matrix(this.width - 1, this.width - 1);
-        let i = 0;
+    //   for (let col = 0; col < this.width; col++) {
+    //     const inner = new Matrix(this.width - 1, this.width - 1);
+    //     let i = 0;
 
-        for (let x = 0; x < this.width; x++) {
-          if (x === col) continue;
-          for (let y = 1; y < this.width; y++) {
-            inner[i++] = this[x + this.width * y];
-          }
-        }
+    //     for (let x = 0; x < this.width; x++) {
+    //       if (x === col) continue;
+    //       for (let y = 1; y < this.width; y++) {
+    //         inner[i++] = this[x + this.width * y];
+    //       }
+    //     }
 
-        const det = inner.det();
+    //     const det = inner.det();
 
-        if (col % 2 === 0) {
-          out += det;
-        } else {
-          out -= det;
-        }
-      }
-      return /** @type {*} */ (out);
-    }
+    //     if (col % 2 === 0) {
+    //       out += det;
+    //     } else {
+    //       out -= det;
+    //     }
+    //   }
+    //   return /** @type {*} */ (out);
+    // }
   }
 
   /**
-   * @returns {Matrix<H, W>}
+   * @param {mat<1, 4>} other
+   */
+  cross(other) {
+    return new mat(1, 4, [
+      this[1] * other[2] - this[2] * other[1],
+      this[2] * other[0] - this[0] * other[2],
+      this[0] * other[1] - this[1] * other[0],
+      0,
+    ]);
+  }
+
+  /**
+   * @param {mat<1, W>} other
+   * @returns {number}
+   */
+  dot(other) {
+    if (this.length !== other.length) {
+      throw new Error("Vectors must be the same length");
+    }
+
+    let result = 0;
+    for (let i = 0; i < this.length; i++) {
+      result += this[i] * other[i];
+    }
+    return result;
+  }
+
+  /**
+   * @returns {mat<H, W>}
    */
   transpose() {
-    const out = new Matrix(this.width, this.height);
+    const out = new mat(this.width, this.height);
 
     for (let x = 0; x < this.width; x++) {
       for (let y = 0; y < this.height; y++) {
@@ -205,7 +284,7 @@ export class Matrix extends Float32Array {
     var f = Math.tan(Math.PI * 0.5 - 0.5 * fieldOfViewInRadians);
     var rangeInv = 1.0 / (near - far);
 
-    return new Matrix(4, 4, [
+    return new mat(4, 4, [
       f / aspect,
       0,
       0,
@@ -229,7 +308,7 @@ export class Matrix extends Float32Array {
    * @param {number} radians
    */
   static x_rotation_3d(radians) {
-    const out = Matrix.identity(4);
+    const out = mat.identity(4);
     out[5] = Math.cos(radians);
     out[6] = -Math.sin(radians);
     out[9] = Math.sin(radians);
@@ -241,7 +320,7 @@ export class Matrix extends Float32Array {
    * @param {number} radians
    */
   static y_rotation_3d(radians) {
-    const out = Matrix.identity(4);
+    const out = mat.identity(4);
     out[0] = Math.cos(radians);
     out[2] = Math.sin(radians);
     out[8] = -Math.sin(radians);
@@ -250,10 +329,19 @@ export class Matrix extends Float32Array {
   }
 
   /**
+   * @template {number} T
+   * @param {mat<T, H>[]} matricies
+   * @returns {mat<T, W>[]}
+   */
+  apply(matricies) {
+    return matricies.map((x) => x.mul(this));
+  }
+
+  /**
    * @param {number} radians
    */
   static z_rotation_3d(radians) {
-    const out = Matrix.identity(4);
+    const out = mat.identity(4);
     out[0] = Math.cos(radians);
     out[1] = -Math.sin(radians);
     out[4] = Math.sin(radians);
@@ -267,7 +355,16 @@ export class Matrix extends Float32Array {
    * @param {number} z
    */
   static translation_3d(x, y, z) {
-    return new Matrix(4, 4, [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, x, y, z, 1]);
+    return new mat(4, 4, [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, x, y, z, 1]);
+  }
+
+  /**
+   * @param {number} x
+   * @param {number} y
+   * @param {number} z
+   */
+  static scale_3d(x, y, z) {
+    return new mat(4, 4, [x, 0, 0, 0, 0, y, 0, 0, 0, 0, z, 0, 0, 0, 0, 1]);
   }
 
   to_arrays() {
@@ -300,8 +397,8 @@ export function deg_to_rad(d) {
 }
 
 {
-  const a = new Matrix(2, 1, [1, 2]);
-  const b = new Matrix(1, 2, [3, 4]);
+  const a = new mat(2, 1, [1, 2]);
+  const b = new mat(1, 2, [3, 4]);
   const c = a.mul(b);
   const d = b.mul(a);
 
@@ -335,4 +432,49 @@ export function deg_to_rad(d) {
  */
 export function cross_product(ax, ay, bx, by, px, py) {
   return (bx - ax) * (py - ay) - (by - ay) * (px - ax);
+}
+
+/**
+ * @param {number} h
+ * @param {number} s
+ * @param {number} l
+ */
+export function hsl_to_rgb(h, s, l) {
+  h = h % 360;
+  const c = (1 - Math.abs(2 * l - 1)) * s;
+  const h_prime = h / 60;
+  const x = c * (1 - Math.abs((h_prime % 2) - 1));
+
+  let r1 = 0;
+  let g1 = 0;
+  let b1 = 0;
+  if (0 <= h_prime && h_prime < 1) {
+    [r1, g1, b1] = [c, x, 0];
+  } else if (1 <= h_prime && h_prime < 2) {
+    [r1, g1, b1] = [x, c, 0];
+  } else if (2 <= h_prime && h_prime < 3) {
+    [r1, g1, b1] = [0, c, x];
+  } else if (3 <= h_prime && h_prime < 4) {
+    [r1, g1, b1] = [0, x, c];
+  } else if (4 <= h_prime && h_prime < 5) {
+    [r1, g1, b1] = [x, 0, c];
+  } else if (5 <= h_prime && h_prime < 6) {
+    [r1, g1, b1] = [c, 0, x];
+  }
+
+  const m = l - c / 2;
+  const r = Math.round((r1 + m) * 255);
+  const g = Math.round((g1 + m) * 255);
+  const b = Math.round((b1 + m) * 255);
+
+  return [r, g, b];
+}
+
+/**
+ * @param {mat<1, 4>} pos
+ * @param {number} screen_width
+ * @param {number} screen_height
+ */
+export function pos_to_screen(pos, screen_width, screen_height) {
+  return new mat(1, 2, [((pos[0] / pos[3] + 1) * screen_width) / 2, ((1 - pos[1] / pos[3]) * screen_height) / 2]);
 }
