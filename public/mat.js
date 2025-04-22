@@ -298,3 +298,41 @@ export function rad_to_deg(r) {
 export function deg_to_rad(d) {
   return (d * Math.PI) / 180;
 }
+
+{
+  const a = new Matrix(2, 1, [1, 2]);
+  const b = new Matrix(1, 2, [3, 4]);
+  const c = a.mul(b);
+  const d = b.mul(a);
+
+  if (c.width !== 2) {
+    never(c.width);
+  }
+  if (c.height !== 2) {
+    never(c.height);
+  }
+  if (d.width !== 1) {
+    never(d.width);
+  }
+  if (d.height !== 1) {
+    never(d.height);
+  }
+  if (d[0] !== 11) {
+    never();
+  }
+  if (c[0] !== 3 || c[1] !== 4 || c[2] !== 6 || c[3] !== 8) {
+    never();
+  }
+}
+
+/**
+ * @param {number} ax
+ * @param {number} ay
+ * @param {number} bx
+ * @param {number} by
+ * @param {number} px
+ * @param {number} py
+ */
+export function cross_product(ax, ay, bx, by, px, py) {
+  return (bx - ax) * (py - ay) - (by - ay) * (px - ax);
+}
