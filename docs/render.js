@@ -37,7 +37,7 @@ export function render_to_canvas(ctx, meshes, view_projection, light_direction_i
       if (is_clockwise) continue;
 
       const surface = p1.sub(p0).cross(p2.sub(p0)).normalize();
-      const light = Math.max(surface.dot(light_direction_inv), 0.2) * 1.1;
+      const light = Math.max(surface.dot(light_direction_inv), 0.2) * 1.5;
 
       trigs.push({
         pos: [p0, p1, p2],
@@ -81,10 +81,10 @@ export function render_to_canvas(ctx, meshes, view_projection, light_direction_i
 
         const pos = (ctx.canvas.width * y + x) * 4;
 
-        image.data[pos] = r;
-        image.data[pos + 1] = g;
-        image.data[pos + 2] = b;
-        image.data[pos + 3] = 255 * light;
+        image.data[pos] = r * light;
+        image.data[pos + 1] = g * light;
+        image.data[pos + 2] = b * light;
+        image.data[pos + 3] = 255;
       }
     }
   }

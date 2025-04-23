@@ -12,9 +12,9 @@ import { box, Mesh, text_to_mesh } from "./mesh.js";
 import { create_canvas, render_to_canvas } from "./render.js";
 
 export function bomhnet() {
-  const ctx = create_canvas("0", "0", "100%", "100%", 3);
+  const ctx = create_canvas("0", "0", "100%", "130px", 2);
 
-  const projection = perspective(deg_to_rad(30), ctx.canvas.width / ctx.canvas.height, 1, 2000);
+  const projection = perspective(deg_to_rad(10), ctx.canvas.width / ctx.canvas.height, 1, 2000);
 
   /** @type {Matrix<1, 4>[]} */
   let points = text_to_mesh(`\
@@ -43,8 +43,8 @@ export function bomhnet() {
    * @param {number} t
    */
   function frame(t) {
-    let camera = translate(-0.1, 0, 1.2 + 3500 / (ctx.canvas.width * 3))
-      .mul(rotate_y(Math.cos(t / 1000) / 6 + 0.5))
+    let camera = translate(-0.1, 0.1, 0.8 + 1000 / ctx.canvas.width)
+      .mul(rotate_y(Math.cos(t / 1000) / 6 + 0.3))
       .mul(rotate_x(Math.sin(t / 1000) / 3 + 0.1));
 
     let view = camera.inv();
