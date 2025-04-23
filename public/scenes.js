@@ -1,84 +1,66 @@
-import { deg_to_rad, Matrix, perspective, translate, rotate_x, rotate_y, rotate_z } from "./mat.js";
+import {
+  deg_to_rad,
+  Matrix,
+  perspective,
+  translate,
+  rotate_x,
+  rotate_y,
+  rotate_z,
+  hsl_to_rgb,
+} from "./mat.js";
 import { box, Mesh, text_to_mesh } from "./mesh.js";
 import { create_canvas, render_to_canvas } from "./render.js";
-import { never } from "./utils.js";
 
-// export function bomhnet() {
-//   const ctxs = [create_canvas("0", "0", "100%", "100%", 1)];
+export function bomhnet() {
+  const ctx = create_canvas("0", "0", "100%", "100%", 1);
 
-//   const projections = [
-//     mat.perspective_3d(deg_to_rad(20), ctxs[0].canvas.width / ctxs[0].canvas.height, 1, 2000),
-//   ];
+  const projection = perspective(deg_to_rad(30), ctx.canvas.width / ctx.canvas.height, 1, 2000);
 
-//   /** @type {mat<1, 4>[]} */
-//   let points = [];
+  /** @type {Matrix<1, 4>[]} */
+  let points = text_to_mesh(`\
+###   ###  #   # #   #   #   # #### #####
+#  # #   # ## ## #   #   ##  # #      #  
+###  #   # # # # #####   # # # ###    #  
+#  # #   # #   # #   #   #  ## #      #  
+###   ###  #   # #   # # #   # ####   #  `);
 
-//   points.push(
-//     ...text_to_mesh(`\
-// ###   ###  #   # #   #   #   # #### #####
-// #  # #   # ## ## #   #   ##  # #      #
-// ###  #   # # # # #####   # # # ###    #
-// #  # #   # #   # #   #   #  ## #      #
-// ###   ###  #   # #   # # #   # ####   #   \
-// `)
-//   );
+  /** @type {Mesh[]} */
+  const meshes = [];
 
-//   /**
-//    * @param {number} a
-//    * @param {number} b
-//    */
-//   function swap(a, b) {
-//     [
-//       points[a * 3],
-//       points[a * 3 + 1],
-//       points[a * 3 + 2],
-//       points[b * 3],
-//       points[b * 3 + 1],
-//       points[b * 3 + 2],
-//     ] = [
-//       points[b * 3],
-//       points[b * 3 + 1],
-//       points[b * 3 + 2],
-//       points[a * 3],
-//       points[a * 3 + 1],
-//       points[a * 3 + 2],
-//     ];
-//   }
+  for (let i = 0; i < points.length; i += 3) {
+    meshes.push(
+      new Mesh(
+        [points[i + 0], points[i + 1], points[i + 2]],
+        hsl_to_rgb(((i / 10) * (1 + Math.random())) / 4, 0.8, 0.5)
+      )
+    );
+  }
 
-//   for (let i = 0; i < points.length / 3 - 40; i++) {
-//     const other = Math.floor(Math.random() * 40);
-//     swap(i, i + other);
-//   }
+  const light_direction = Matrix.forward.mul(rotate_x(0.9)).mul(rotate_y(0.4));
+  const light_direction_inv = light_direction.neg();
 
-//   const light_direction = mat.forward.mul(mat.x_rotation_3d(0.9)).mul(mat.y_rotation_3d(0.4));
-//   const light_direction_inv = light_direction.neg();
+  /**
+   * @param {number} t
+   */
+  function frame(t) {
+    let camera = translate(0, 0, 5)
+      .mul(rotate_y(Math.cos(t / 1000) / 6 + 0.5))
+      .mul(rotate_x(Math.sin(t / 1000) / 3 + 0.1));
 
-//   /**
-//    * @param {number} t
-//    */
-//   function frame(t) {
-//     for (let i = 0; i < ctxs.length; i++) {
-//       const ctx = ctxs[i];
-//       const projection = projections[i];
+    let view = camera.inv();
+    let view_projection = view.mul(projection);
 
-//       let camera = mat.translation_3d(0, 0.2, 7);
+    render_to_canvas(
+      ctx,
+      meshes.slice(0, 3 * Math.floor(t / 4)),
+      view_projection,
+      light_direction_inv
+    );
 
-//       camera = camera
-//         .mul(mat.y_rotation_3d(Math.sin(t / 1000) / 10 + 0.5))
-//         .mul(mat.x_rotation_3d(Math.cos(t / 1000) / 10 - 0.3));
-
-//       let view = camera.inv();
-//       let view_projection = view.mul(projection);
-
-//       const points_slice = points.slice(0, 3 * Math.floor(t / 2));
-
-//       render_to_canvas(ctx, points_slice, view_projection, light_direction_inv);
-//     }
-
-//     requestAnimationFrame(frame);
-//   }
-//   frame(performance.now());
-// }
+    requestAnimationFrame(frame);
+  }
+  frame(performance.now());
+}
 
 export function box_test() {
   const ctx = create_canvas("0", "0", "100%", "100%", 1);

@@ -1,3 +1,3 @@
-import { box_test } from "./scenes.js";
+import { box_test, bomhnet } from "./scenes.js";
 
-box_test();
+bomhnet();

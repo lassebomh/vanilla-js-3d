@@ -37,7 +37,7 @@ export function render_to_canvas(ctx, meshes, view_projection, light_direction_i
       if (is_clockwise) continue;
 
       const surface = p1.sub(p0).cross(p2.sub(p0)).normalize();
-      const light = Math.max(surface.dot(light_direction_inv), 0.1);
+      const light = Math.max(surface.dot(light_direction_inv), 0.2) * 1.1;
 
       trigs.push({
         pos: [p0, p1, p2],

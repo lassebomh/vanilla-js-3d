@@ -82,7 +82,7 @@ export function text_to_mesh(text) {
     }
   }
 
-  return scale(0.07, 0.07, 0.07).apply(translate(-19, 0, 0).apply(points));
+  return scale(0.07, 0.07, 0.07).apply(translate(-width / 2, -height / 2, 0).apply(points));
 }
 
 export function model_box() {

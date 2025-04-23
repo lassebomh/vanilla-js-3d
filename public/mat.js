@@ -330,6 +330,7 @@ export function cross_product(ax, ay, bx, by, px, py) {
  * @param {number} h
  * @param {number} s
  * @param {number} l
+ * @returns {[number, number, number]}
  */
 export function hsl_to_rgb(h, s, l) {
   h = h % 360;
