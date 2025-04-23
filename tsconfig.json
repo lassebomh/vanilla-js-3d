@@ -18,5 +18,5 @@
     "noFallthroughCasesInSwitch": true,
     "exactOptionalPropertyTypes": true
   },
-  "include": ["./public/**/*.js"]
+  "include": ["docs/**/*.js"]
 }

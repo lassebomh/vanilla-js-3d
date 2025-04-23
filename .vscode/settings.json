@@ -1,4 +1,4 @@
 {
-  "liveServer.settings.root": "./public",
+  "liveServer.settings.root": "./docs",
   "javascript.preferences.importModuleSpecifierEnding": "js"
 }
