@@ -119,14 +119,19 @@ export function text_3d() {
         text_mesh_handler.add_char(" ");
       }
     }
-    for (const char of "welcome to bomholt<<<.net".toUpperCase().split("")) {
+
+    // for (const char of "bomh.net".toUpperCase().split("")) {
+    for (const char of "hello world!<<<<<<<<<<<<welcome to bomh.net".toUpperCase().split("")) {
       if (char === "<") {
         if (last_char !== "<") {
-          await sleep(800);
+          await sleep(1200);
         }
         text_mesh_handler.delete_last_char();
-        await sleep(200);
+        await sleep(100);
       } else {
+        if (last_char === "<") {
+          await sleep(1200);
+        }
         text_mesh_handler.add_char(char);
         if (char === " ") {
           await sleep(300);
@@ -189,13 +194,13 @@ export function text_3d() {
       }
     }
 
-    current_rotation += (text_mesh_handler.current_angle - current_rotation) / 16;
+    current_rotation += (text_mesh_handler.current_angle - current_rotation) / 4;
 
-    let camera = scale(window.innerWidth < 700 ? 1.5 : 1, 1, 1).mul(
+    let camera = scale(window.innerWidth < 500 ? 1.2 : 1, 1, 1).mul(
       translate(0, 0, text_mesh_handler.distance_from_center + 30)
         .mul(rotate_x(0.2 + Math.cos(t / 1000) / 128))
-        .mul(rotate_y(current_rotation + 0.22))
-        .mul(translate(0, -15, 0))
+        .mul(rotate_y(current_rotation + 0.55))
+        .mul(translate(0, -4, 0))
     );
 
     let view = camera.inv();

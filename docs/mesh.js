@@ -171,7 +171,7 @@ export class TextMeshHandler {
 
   current_width = 0;
   current_angle = 0;
-  distance_from_center = 100;
+  distance_from_center = 40;
 
   show_cursor = false;
   /** @type {number | undefined} */
@@ -218,7 +218,7 @@ export class TextMeshHandler {
    */
   add_char(char) {
     const { points, width } = this.char_data[char] ?? fail();
-    const color = hsl_to_rgb(this.current_angle * -1.125 * 360, 0.5, 0.5);
+    const color = hsl_to_rgb(this.chars.length * 15, 0.5, 0.5);
 
     const mesh_points = rotate_y(this.current_angle).apply(
       translate(0, 0, this.distance_from_center).apply(points)
