@@ -198,7 +198,7 @@ export function text_3d() {
 
     let camera = scale(window.innerWidth < 500 ? 1.2 : 1, 1, 1).mul(
       translate(0, 0, text_mesh_handler.distance_from_center + 30)
-        .mul(rotate_x(0.2 + Math.cos(t / 1000) / 128))
+        .mul(rotate_x(0.2 + Math.cos(t / 1000) / 256))
         .mul(rotate_y(current_rotation + 0.55))
         .mul(translate(0, -4, 0))
     );
