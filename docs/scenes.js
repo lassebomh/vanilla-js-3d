@@ -97,7 +97,7 @@ export function bomhnet() {
 }
 
 export function text_3d() {
-  const ctx = create_canvas("0", "0", "100%", "200px", 3);
+  const ctx = create_canvas("0", "0", "100%", "200px", 2);
   const container = ctx.canvas.parentElement ?? fail();
 
   const input = document.createElement("input");
@@ -108,26 +108,47 @@ export function text_3d() {
   container.appendChild(input);
 
   const text_mesh_handler = new TextMeshHandler();
-  let char_limit = 14;
+  let char_limit = 30;
 
   (async () => {
-    for (const char of "WELCOME TO BOMH.NET".split("")) {
-      text_mesh_handler.add_char(char);
-      await sleep(100);
-      if (char === " ") {
-        await sleep(300);
+    /** @type {string | undefined} */
+    let last_char;
+    if (last_char !== undefined) {
+      for (let i = 0; i < 5; i++) {
+        await sleep(50);
+        text_mesh_handler.add_char(" ");
       }
     }
-    for (let limit = char_limit; limit > 8; limit--) {
-      char_limit = limit;
-      await sleep(200);
+    for (const char of "welcome to bomholt<<<.net".toUpperCase().split("")) {
+      if (char === "<") {
+        if (last_char !== "<") {
+          await sleep(800);
+        }
+        text_mesh_handler.delete_last_char();
+        await sleep(200);
+      } else {
+        text_mesh_handler.add_char(char);
+        if (char === " ") {
+          await sleep(300);
+        } else {
+          await sleep(100);
+        }
+      }
+
+      last_char = char;
     }
-    await sleep(2000);
-    char_limit = 12;
+
+    char_limit = 8;
   })();
 
-  const projection = perspective(deg_to_rad(25), ctx.canvas.width / ctx.canvas.height, 1, 2000);
+  const projection = perspective(
+    deg_to_rad(window.innerWidth < 700 ? 35 : 25),
+    ctx.canvas.width / ctx.canvas.height,
+    1,
+    2000
+  );
 
+  input.value = " ".repeat(100);
   input.addEventListener("input", (e) => {
     const event = /** @type {InputEvent} */ (e);
     if (event.inputType === "deleteContentBackward") {
@@ -137,6 +158,8 @@ export function text_3d() {
     }
   });
 
+  const cursor = unit_box();
+
   let current_rotation = 0;
 
   /**
@@ -145,9 +168,6 @@ export function text_3d() {
   function frame(t) {
     for (let i = 0; i < text_mesh_handler.meshes.length - char_limit; i++) {
       const mesh = text_mesh_handler.meshes[i];
-      if (mesh.points.length >= 6) {
-        mesh.points.splice(Math.floor((Math.random() * mesh.points.length) / 3) * 3, 6);
-      }
       if (mesh.points.length >= 3) {
         mesh.points.splice(Math.floor((Math.random() * mesh.points.length) / 3) * 3, 3);
       }
@@ -163,7 +183,7 @@ export function text_3d() {
 
     current_rotation += (text_mesh_handler.current_angle - current_rotation) / 16;
 
-    let camera = scale(ctx.canvas.width < 700 ? 1.5 : 1, 1, 1).mul(
+    let camera = scale(window.innerWidth < 700 ? 1.5 : 1, 1, 1).mul(
       translate(0, 0, text_mesh_handler.distance_from_center + 30)
         .mul(rotate_x(0.2 + Math.cos(t / 1000) / 128))
         .mul(rotate_y(current_rotation + 0.22))
@@ -179,7 +199,21 @@ export function text_3d() {
       .mul(rotate_y(text_mesh_handler.current_angle));
     const light_direction_inv = light_direction.neg();
 
-    render_to_canvas(ctx, text_mesh_handler.meshes, view_projection, light_direction_inv);
+    const meshes = [...text_mesh_handler.meshes];
+
+    if (text_mesh_handler.show_cursor) {
+      meshes.push(
+        new Mesh(
+          scale(0.25, 7, 0.5)
+            .mul(translate(0, 0, text_mesh_handler.distance_from_center))
+            .mul(rotate_y(text_mesh_handler.current_angle))
+            .apply(cursor),
+          [127, 127, 127]
+        )
+      );
+    }
+
+    render_to_canvas(ctx, meshes, view_projection, light_direction_inv);
 
     requestAnimationFrame(frame);
   }

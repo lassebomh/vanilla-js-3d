@@ -173,6 +173,10 @@ export class TextMeshHandler {
   current_angle = 0;
   distance_from_center = 100;
 
+  show_cursor = false;
+  /** @type {number | undefined} */
+  show_cursor_interval = undefined;
+
   update_current_angle() {
     this.current_angle = -this.current_width / (this.distance_from_center * 1.15);
   }
@@ -189,6 +193,16 @@ export class TextMeshHandler {
     }
   }
 
+  debounce_cursor() {
+    if (this.show_cursor_interval !== undefined) {
+      clearInterval(this.show_cursor_interval);
+      this.show_cursor = true;
+    }
+    this.show_cursor_interval = setInterval(() => {
+      this.show_cursor = !this.show_cursor;
+    }, 750);
+  }
+
   delete_last_char() {
     if (this.meshes.length) {
       this.current_width -= (this.widths.pop() ?? fail()) + 2;
@@ -196,6 +210,7 @@ export class TextMeshHandler {
       this.chars.pop();
       this.update_current_angle();
     }
+    this.debounce_cursor();
   }
 
   /**
@@ -204,7 +219,6 @@ export class TextMeshHandler {
   add_char(char) {
     const { points, width } = this.char_data[char] ?? fail();
     const color = hsl_to_rgb(this.current_angle * -1.125 * 360, 0.5, 0.5);
-    console.log(this.current_angle, color);
 
     const mesh_points = rotate_y(this.current_angle).apply(
       translate(0, 0, this.distance_from_center).apply(points)
@@ -216,6 +230,7 @@ export class TextMeshHandler {
     this.chars.push(char);
     this.current_width += width + 2;
     this.update_current_angle();
+    this.debounce_cursor();
   }
 }
 
@@ -461,6 +476,15 @@ const char_points = Object.fromEntries([
  
  
  
+ 
+#`,
+  ],
+  [
+    "!",
+    `\
+#
+#
+#
  
 #`,
   ],
