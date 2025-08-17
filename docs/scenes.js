@@ -7,6 +7,7 @@ import {
   rotate_y,
   rotate_z,
   hsl_to_rgb,
+  scale,
 } from "./mat.js";
 import { unit_box, Mesh, text_to_points, TextMeshHandler } from "./mesh.js";
 import { create_canvas, render_to_canvas } from "./render.js";
@@ -162,10 +163,12 @@ export function text_3d() {
 
     current_rotation += (text_mesh_handler.current_angle - current_rotation) / 16;
 
-    let camera = translate(0, 0, text_mesh_handler.distance_from_center + 30)
-      .mul(rotate_x(0.2 + Math.cos(t / 1000) / 128))
-      .mul(rotate_y(current_rotation + 0.24))
-      .mul(translate(0, -15, 0));
+    let camera = scale(ctx.canvas.width < 700 ? 1.5 : 1, 1, 1).mul(
+      translate(0, 0, text_mesh_handler.distance_from_center + 30)
+        .mul(rotate_x(0.2 + Math.cos(t / 1000) / 128))
+        .mul(rotate_y(current_rotation + 0.22))
+        .mul(translate(0, -15, 0))
+    );
 
     let view = camera.inv();
     let view_projection = view.mul(projection);
