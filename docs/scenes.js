@@ -107,7 +107,7 @@ export function text_3d() {
   container.appendChild(input);
 
   const text_mesh_handler = new TextMeshHandler();
-  let char_limit = 999;
+  let char_limit = 14;
 
   (async () => {
     for (const char of "WELCOME TO BOMH.NET".split("")) {
@@ -117,10 +117,9 @@ export function text_3d() {
         await sleep(300);
       }
     }
-    char_limit = 8;
-    for (let limit = 20; limit > 8; limit--) {
+    for (let limit = char_limit; limit > 8; limit--) {
       char_limit = limit;
-      await sleep(400);
+      await sleep(200);
     }
     await sleep(2000);
     char_limit = 12;
@@ -161,7 +160,7 @@ export function text_3d() {
       }
     }
 
-    current_rotation += (text_mesh_handler.current_angle - current_rotation) / 32;
+    current_rotation += (text_mesh_handler.current_angle - current_rotation) / 16;
 
     let camera = translate(0, 0, text_mesh_handler.distance_from_center + 30)
       .mul(rotate_x(0.2 + Math.cos(t / 1000) / 128))
