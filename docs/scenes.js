@@ -139,6 +139,10 @@ export function text_3d() {
     }
 
     char_limit = 8;
+
+    await sleep(3000);
+
+    char_limit = 30;
   })();
 
   const projection = perspective(
