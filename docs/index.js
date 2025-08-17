@@ -1,3 +1,3 @@
-import { box_test, bomhnet } from "./scenes.js";
+import { text_3d } from "./scenes.js";
 
-bomhnet();
+text_3d();

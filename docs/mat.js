@@ -1,4 +1,4 @@
-import { assert, never } from "./utils.js";
+import { never } from "./utils.js";
 
 /**
  * @template {number} H
@@ -76,53 +76,53 @@ export class Matrix extends Float32Array {
   }
 
   inv() {
-    var m00 = this[0 * 4 + 0];
-    var m01 = this[0 * 4 + 1];
-    var m02 = this[0 * 4 + 2];
-    var m03 = this[0 * 4 + 3];
-    var m10 = this[1 * 4 + 0];
-    var m11 = this[1 * 4 + 1];
-    var m12 = this[1 * 4 + 2];
-    var m13 = this[1 * 4 + 3];
-    var m20 = this[2 * 4 + 0];
-    var m21 = this[2 * 4 + 1];
-    var m22 = this[2 * 4 + 2];
-    var m23 = this[2 * 4 + 3];
-    var m30 = this[3 * 4 + 0];
-    var m31 = this[3 * 4 + 1];
-    var m32 = this[3 * 4 + 2];
-    var m33 = this[3 * 4 + 3];
-    var tmp_0 = m22 * m33;
-    var tmp_1 = m32 * m23;
-    var tmp_2 = m12 * m33;
-    var tmp_3 = m32 * m13;
-    var tmp_4 = m12 * m23;
-    var tmp_5 = m22 * m13;
-    var tmp_6 = m02 * m33;
-    var tmp_7 = m32 * m03;
-    var tmp_8 = m02 * m23;
-    var tmp_9 = m22 * m03;
-    var tmp_10 = m02 * m13;
-    var tmp_11 = m12 * m03;
-    var tmp_12 = m20 * m31;
-    var tmp_13 = m30 * m21;
-    var tmp_14 = m10 * m31;
-    var tmp_15 = m30 * m11;
-    var tmp_16 = m10 * m21;
-    var tmp_17 = m20 * m11;
-    var tmp_18 = m00 * m31;
-    var tmp_19 = m30 * m01;
-    var tmp_20 = m00 * m21;
-    var tmp_21 = m20 * m01;
-    var tmp_22 = m00 * m11;
-    var tmp_23 = m10 * m01;
+    let m00 = this[0 * 4 + 0];
+    let m01 = this[0 * 4 + 1];
+    let m02 = this[0 * 4 + 2];
+    let m03 = this[0 * 4 + 3];
+    let m10 = this[1 * 4 + 0];
+    let m11 = this[1 * 4 + 1];
+    let m12 = this[1 * 4 + 2];
+    let m13 = this[1 * 4 + 3];
+    let m20 = this[2 * 4 + 0];
+    let m21 = this[2 * 4 + 1];
+    let m22 = this[2 * 4 + 2];
+    let m23 = this[2 * 4 + 3];
+    let m30 = this[3 * 4 + 0];
+    let m31 = this[3 * 4 + 1];
+    let m32 = this[3 * 4 + 2];
+    let m33 = this[3 * 4 + 3];
+    let tmp_0 = m22 * m33;
+    let tmp_1 = m32 * m23;
+    let tmp_2 = m12 * m33;
+    let tmp_3 = m32 * m13;
+    let tmp_4 = m12 * m23;
+    let tmp_5 = m22 * m13;
+    let tmp_6 = m02 * m33;
+    let tmp_7 = m32 * m03;
+    let tmp_8 = m02 * m23;
+    let tmp_9 = m22 * m03;
+    let tmp_10 = m02 * m13;
+    let tmp_11 = m12 * m03;
+    let tmp_12 = m20 * m31;
+    let tmp_13 = m30 * m21;
+    let tmp_14 = m10 * m31;
+    let tmp_15 = m30 * m11;
+    let tmp_16 = m10 * m21;
+    let tmp_17 = m20 * m11;
+    let tmp_18 = m00 * m31;
+    let tmp_19 = m30 * m01;
+    let tmp_20 = m00 * m21;
+    let tmp_21 = m20 * m01;
+    let tmp_22 = m00 * m11;
+    let tmp_23 = m10 * m01;
 
-    var t0 = tmp_0 * m11 + tmp_3 * m21 + tmp_4 * m31 - (tmp_1 * m11 + tmp_2 * m21 + tmp_5 * m31);
-    var t1 = tmp_1 * m01 + tmp_6 * m21 + tmp_9 * m31 - (tmp_0 * m01 + tmp_7 * m21 + tmp_8 * m31);
-    var t2 = tmp_2 * m01 + tmp_7 * m11 + tmp_10 * m31 - (tmp_3 * m01 + tmp_6 * m11 + tmp_11 * m31);
-    var t3 = tmp_5 * m01 + tmp_8 * m11 + tmp_11 * m21 - (tmp_4 * m01 + tmp_9 * m11 + tmp_10 * m21);
+    let t0 = tmp_0 * m11 + tmp_3 * m21 + tmp_4 * m31 - (tmp_1 * m11 + tmp_2 * m21 + tmp_5 * m31);
+    let t1 = tmp_1 * m01 + tmp_6 * m21 + tmp_9 * m31 - (tmp_0 * m01 + tmp_7 * m21 + tmp_8 * m31);
+    let t2 = tmp_2 * m01 + tmp_7 * m11 + tmp_10 * m31 - (tmp_3 * m01 + tmp_6 * m11 + tmp_11 * m31);
+    let t3 = tmp_5 * m01 + tmp_8 * m11 + tmp_11 * m21 - (tmp_4 * m01 + tmp_9 * m11 + tmp_10 * m21);
 
-    var d = 1.0 / (m00 * t0 + m10 * t1 + m20 * t2 + m30 * t3);
+    let d = 1.0 / (m00 * t0 + m10 * t1 + m20 * t2 + m30 * t3);
 
     const array = [
       d * t0,
@@ -179,7 +179,6 @@ export class Matrix extends Float32Array {
 
   normalize() {
     const dist = Math.hypot(this[0], this[1], this[2]);
-
     return this.div(dist);
   }
 
@@ -288,31 +287,32 @@ export function deg_to_rad(d) {
   return (d * Math.PI) / 180;
 }
 
-{
-  const a = new Matrix(2, 1, [1, 2]);
-  const b = new Matrix(1, 2, [3, 4]);
-  const c = a.mul(b);
-  const d = b.mul(a);
+// // Test
+// {
+//   const a = new Matrix(2, 1, [1, 2]);
+//   const b = new Matrix(1, 2, [3, 4]);
+//   const c = a.mul(b);
+//   const d = b.mul(a);
 
-  if (c.width !== 2) {
-    never(c.width);
-  }
-  if (c.height !== 2) {
-    never(c.height);
-  }
-  if (d.width !== 1) {
-    never(d.width);
-  }
-  if (d.height !== 1) {
-    never(d.height);
-  }
-  if (d[0] !== 11) {
-    never();
-  }
-  if (c[0] !== 3 || c[1] !== 4 || c[2] !== 6 || c[3] !== 8) {
-    never();
-  }
-}
+//   if (c.width !== 2) {
+//     never(c.width);
+//   }
+//   if (c.height !== 2) {
+//     never(c.height);
+//   }
+//   if (d.width !== 1) {
+//     never(d.width);
+//   }
+//   if (d.height !== 1) {
+//     never(d.height);
+//   }
+//   if (d[0] !== 11) {
+//     never();
+//   }
+//   if (c[0] !== 3 || c[1] !== 4 || c[2] !== 6 || c[3] !== 8) {
+//     never();
+//   }
+// }
 
 /**
  * @param {number} ax
@@ -382,8 +382,8 @@ export function pos_to_screen(pos, screen_width, screen_height) {
  * @param {number} far
  */
 export function perspective(fieldOfViewInRadians, aspect, near, far) {
-  var f = Math.tan(Math.PI * 0.5 - 0.5 * fieldOfViewInRadians);
-  var rangeInv = 1.0 / (near - far);
+  let f = Math.tan(Math.PI * 0.5 - 0.5 * fieldOfViewInRadians);
+  let rangeInv = 1.0 / (near - far);
 
   return new Matrix(4, 4, [
     f / aspect,

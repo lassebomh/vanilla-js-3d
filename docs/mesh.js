@@ -1,4 +1,5 @@
-import { Matrix, scale, translate, rotate_x, rotate_y } from "./mat.js";
+import { Matrix, scale, translate, rotate_x, rotate_y, hsl_to_rgb } from "./mat.js";
+import { fail } from "./utils.js";
 
 export class Mesh {
   /**
@@ -47,7 +48,7 @@ export function quad() {
   ];
 }
 
-export function box() {
+export function unit_box() {
   const transl = translate(-0.5, -0.5, 0.5);
   const q = transl.apply(quad());
   return transl
@@ -65,7 +66,7 @@ export function box() {
 /**
  * @param {string} text
  */
-export function text_to_mesh(text) {
+export function text_to_points(text) {
   /** @type {Matrix<1,4>[]} */
   const points = [];
 
@@ -77,12 +78,35 @@ export function text_to_mesh(text) {
   for (let x = 0; x < width; x++) {
     for (let y = 0; y < height; y++) {
       if (pixels[y][x]) {
-        points.push(...translate(x, height - y, 0).apply(box()));
+        points.push(...translate(x, height - y, 0).apply(unit_box()));
       }
     }
   }
 
   return scale(0.07, 0.07, 0.07).apply(translate(-width / 2, -height / 2, 0).apply(points));
+}
+
+/**
+ * @param {string} text
+ */
+export function text_to_points_unit(text) {
+  /** @type {Matrix<1,4>[]} */
+  const points = [];
+
+  const pixels = text.split("\n").map((x) => x.split("").map((y) => y === "#"));
+
+  const height = pixels.length;
+  const width = pixels[0].length;
+
+  for (let x = 0; x < width; x++) {
+    for (let y = 0; y < height; y++) {
+      if (pixels[y][x]) {
+        points.push(...translate(x, height - y, 0).apply(unit_box()));
+      }
+    }
+  }
+
+  return points;
 }
 
 export function model_box() {
@@ -136,3 +160,476 @@ export function model_box() {
     new Matrix(1, 4, [-1, 1, 1, 1]),
   ];
 }
+
+export class TextMeshHandler {
+  /** @type {Mesh[]} */
+  meshes = [];
+  /** @type {number[]} */
+  widths = [];
+  /** @type {string[]} */
+  chars = [];
+
+  current_width = 0;
+  current_angle = 0;
+  distance_from_center = 100;
+
+  update_current_angle() {
+    this.current_angle = -this.current_width / (this.distance_from_center * 1.15);
+  }
+
+  /** @type {Record<string, {width: number, points: Matrix<1, 4>[]} | undefined>} */
+  char_data = {};
+
+  constructor() {
+    for (const [char, text] of Object.entries(char_points)) {
+      this.char_data[char] = {
+        width: text.split("\n")[0].length,
+        points: text_to_points_unit(text),
+      };
+    }
+  }
+
+  delete_last_char() {
+    if (this.meshes.length) {
+      this.current_width -= (this.widths.pop() ?? fail()) + 2;
+      this.meshes.pop();
+      this.chars.pop();
+      this.update_current_angle();
+    }
+  }
+
+  /**
+   * @param {string} char
+   */
+  add_char(char) {
+    const { points, width } = this.char_data[char] ?? fail();
+    const color = hsl_to_rgb(-this.current_angle * 360, 0.5, 0.5);
+    console.log(this.current_angle, color);
+
+    const mesh_points = rotate_y(this.current_angle).apply(
+      translate(0, 0, this.distance_from_center).apply(points)
+    );
+
+    const mesh = new Mesh(mesh_points, color);
+    this.meshes.push(mesh);
+    this.widths.push(width);
+    this.chars.push(char);
+    this.current_width += width + 2;
+    this.update_current_angle();
+  }
+}
+
+/** @type {Record<string, string>} */
+const char_points = Object.fromEntries([
+  [
+    "A",
+    `\
+  #  
+ # # 
+#   #
+#####
+#   #
+#   #`,
+  ],
+  [
+    "B",
+    `\
+#### 
+#   #
+#### 
+#   #
+#   #
+#### `,
+  ],
+  [
+    "C",
+    `\
+ ####
+#    
+#    
+#    
+#    
+ ####`,
+  ],
+  [
+    "D",
+    `\
+###  
+#  # 
+#   #
+#   #
+#  # 
+###  `,
+  ],
+  [
+    "E",
+    `\
+#####
+#    
+#### 
+#    
+#    
+#####`,
+  ],
+  [
+    "F",
+    `\
+#####
+#    
+#### 
+#    
+#    
+#    `,
+  ],
+  [
+    "G",
+    `\
+ ####
+#    
+#    
+#  ##
+#   #
+ ####`,
+  ],
+  [
+    "H",
+    `\
+#   #
+#   #
+#####
+#   #
+#   #
+#   #`,
+  ],
+  [
+    "I",
+    `\
+###
+ # 
+ # 
+ # 
+ # 
+###`,
+  ],
+  [
+    "J",
+    `\
+  ###
+   # 
+   # 
+   # 
+#  # 
+ ##  `,
+  ],
+  [
+    "K",
+    `\
+#   #
+# ## 
+##   
+# #  
+#  #  
+#   #`,
+  ],
+  [
+    "L",
+    `\
+#    
+#    
+#    
+#    
+#    
+#####`,
+  ],
+  [
+    "M",
+    `\
+#   #
+## ##
+# # #
+#   #
+#   #
+#   #`,
+  ],
+  [
+    "N",
+    `\
+#   #
+##  #
+# # #
+#  ##
+#   #
+#   #`,
+  ],
+  [
+    "O",
+    `\
+ ### 
+#   #
+#   #
+#   #
+#   #
+ ### `,
+  ],
+  [
+    "P",
+    `\
+#### 
+#   #
+#   #
+#### 
+#    
+#    `,
+  ],
+  [
+    "Q",
+    `\
+ ### 
+#   #
+#   #
+# # #
+#  # 
+ ## #`,
+  ],
+  [
+    "R",
+    `\
+#### 
+#   #
+#   #
+#### 
+#  # 
+#   #`,
+  ],
+  [
+    "S",
+    `\
+ ####
+#    
+ ### 
+    #
+    #
+#### `,
+  ],
+  [
+    "T",
+    `\
+#####
+  #  
+  #  
+  #  
+  #  
+  #  `,
+  ],
+  [
+    "U",
+    `\
+#   #
+#   #
+#   #
+#   #
+#   #
+ ### `,
+  ],
+  [
+    "V",
+    `\
+#   #
+#   #
+#   #
+#   #
+ # # 
+  #  `,
+  ],
+  [
+    "W",
+    `\
+#   #
+#   #
+#   #
+# # #
+## ##
+#   #`,
+  ],
+  [
+    "X",
+    `\
+#   #
+ # # 
+  #  
+ # # 
+#   #
+#   #`,
+  ],
+  [
+    "Y",
+    `\
+#   #
+ # # 
+  #  
+  #  
+  #  
+  #  `,
+  ],
+  [
+    "Z",
+    `\
+##### 
+   #  
+  #   
+ #    
+#    
+#####`,
+  ],
+  [
+    ".",
+    `\
+ 
+ 
+ 
+ 
+ 
+#`,
+  ],
+  [
+    ",",
+    `\
+
+
+
+
+#
+#`,
+  ],
+  [
+    "_",
+    `\
+     
+     
+     
+     
+     
+#####`,
+  ],
+  [
+    "-",
+    `\
+     
+     
+     
+##### 
+     
+     `,
+  ],
+  [
+    " ",
+    `\
+   
+   
+   
+   
+   
+   `,
+  ],
+
+  [
+    "0",
+    `\
+ ### 
+#  ##
+# # #
+##  #
+#   #
+ ### `,
+  ],
+  [
+    "1",
+    `\
+  #  
+ ##  
+  #  
+  #  
+  #  
+ ### `,
+  ],
+  [
+    "2",
+    `\
+ ### 
+#   #
+   # 
+  #  
+ #   
+#####`,
+  ],
+  [
+    "3",
+    `\
+ ### 
+#   #
+   # 
+  ## 
+#   #
+ ### `,
+  ],
+  [
+    "4",
+    `\
+   # 
+  ## 
+ # # 
+##### 
+   # 
+   # `,
+  ],
+  [
+    "5",
+    `\
+##### 
+#     
+####  
+    # 
+#   # 
+ ###  `,
+  ],
+  [
+    "6",
+    `\
+ ### 
+#    
+#### 
+#   #
+#   #
+ ### `,
+  ],
+  [
+    "7",
+    `\
+##### 
+    # 
+   #  
+  #   
+ #    
+#     `,
+  ],
+  [
+    "8",
+    `\
+ ### 
+#   #
+ ### 
+#   #
+#   #
+ ### `,
+  ],
+  [
+    "9",
+    `\
+ ### 
+#   #
+#   #
+ ####
+    #
+ ### `,
+  ],
+]);

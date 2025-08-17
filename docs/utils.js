@@ -8,6 +8,13 @@
 export function never(...args) {
   throw new Error("Unreachable code ran with " + args.map(String));
 }
+/**
+ * @param {string} msg
+ * @returns {never}
+ */
+export function fail(msg = "AssertionError") {
+  throw new Error(msg);
+}
 
 /**
  * @param {*} value
