@@ -142,7 +142,7 @@ export function text_3d() {
 
     await sleep(3000);
 
-    char_limit = 30;
+    char_limit = 18;
   })();
 
   const projection = perspective(
@@ -172,6 +172,10 @@ export function text_3d() {
   function frame(t) {
     for (let i = 0; i < text_mesh_handler.meshes.length - char_limit; i++) {
       const mesh = text_mesh_handler.meshes[i];
+      if (mesh.points.length >= 3) {
+        mesh.points.splice(Math.floor((Math.random() * mesh.points.length) / 3) * 3, 3);
+      }
+
       if (mesh.points.length >= 3) {
         mesh.points.splice(Math.floor((Math.random() * mesh.points.length) / 3) * 3, 3);
       }
