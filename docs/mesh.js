@@ -161,6 +161,45 @@ export function model_box() {
   ];
 }
 
+/**
+ * @param {Matrix<1, 4>[]} points
+ */
+export function filter_colliding_quads(points) {
+  /** @type {Map<string, number>} */
+  const map = new Map();
+  const duplicates = new Array(points.length).fill(false);
+
+  for (let i = 0; i < points.length; i += 6) {
+    const a = points[i];
+    const b = points[i + 1];
+    const c = points[i + 2];
+    const d = points[i + 5];
+
+    const center = a.add(b).add(c).add(d).div(4);
+
+    const key = `${center.x.toFixed(2)},${center.y.toFixed(2)},${center.z.toFixed(2)}`;
+
+    const existing_index = map.get(key);
+    if (existing_index !== undefined) {
+      duplicates[i] = true;
+      duplicates[existing_index] = true;
+    } else {
+      map.set(key, i);
+    }
+  }
+
+  /** @type {Matrix<1,4>[]} */
+  const out = [];
+
+  for (let i = 0; i < points.length; i += 6) {
+    if (!duplicates[i]) {
+      out.push(...points.slice(i, i + 6));
+    }
+  }
+
+  return out;
+}
+
 export class TextMeshHandler {
   /** @type {Mesh[]} */
   meshes = [];
@@ -171,7 +210,7 @@ export class TextMeshHandler {
 
   current_width = 0;
   current_angle = 0;
-  distance_from_center = 40;
+  distance_from_center = 70;
 
   show_cursor = false;
   /** @type {number | undefined} */
@@ -188,7 +227,7 @@ export class TextMeshHandler {
     for (const [char, text] of Object.entries(char_points)) {
       this.char_data[char] = {
         width: text.split("\n")[0].length,
-        points: text_to_points_unit(text),
+        points: filter_colliding_quads(text_to_points_unit(text)),
       };
     }
   }

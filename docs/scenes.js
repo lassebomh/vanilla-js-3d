@@ -109,6 +109,8 @@ export function text_3d() {
 
   const text_mesh_handler = new TextMeshHandler();
   let char_limit = 30;
+  let rotation_offset = 0.42;
+  let current_rotation = rotation_offset;
 
   (async () => {
     /** @type {string | undefined} */
@@ -120,14 +122,16 @@ export function text_3d() {
       }
     }
 
-    // for (const char of "bomh.net".toUpperCase().split("")) {
-    for (const char of "hello world!<<<<<<<<<<<<welcome to bomh.net".toUpperCase().split("")) {
+    for (const char of "hello world!| welcome to bomh.net".toUpperCase().split("")) {
       if (char === "<") {
         if (last_char !== "<") {
           await sleep(1200);
         }
         text_mesh_handler.delete_last_char();
         await sleep(100);
+      } else if (char === "|") {
+        await sleep(1300);
+        rotation_offset = 0.32;
       } else {
         if (last_char === "<") {
           await sleep(1200);
@@ -151,7 +155,7 @@ export function text_3d() {
   })();
 
   const projection = perspective(
-    deg_to_rad(window.innerWidth < 700 ? 35 : 25),
+    deg_to_rad(window.innerWidth < 700 ? 45 : 25),
     ctx.canvas.width / ctx.canvas.height,
     1,
     2000
@@ -168,8 +172,6 @@ export function text_3d() {
   });
 
   const cursor = unit_box();
-
-  let current_rotation = 0;
 
   /**
    * @param {number} t
@@ -194,13 +196,13 @@ export function text_3d() {
       }
     }
 
-    current_rotation += (text_mesh_handler.current_angle - current_rotation) / 4;
+    current_rotation += (text_mesh_handler.current_angle + rotation_offset - current_rotation) / 16;
 
     let camera = scale(window.innerWidth < 500 ? 1.2 : 1, 1, 1).mul(
       translate(0, 0, text_mesh_handler.distance_from_center + 30)
-        .mul(rotate_x(0.2 + Math.cos(t / 1000) / 256))
-        .mul(rotate_y(current_rotation + 0.55))
-        .mul(translate(0, -4, 0))
+        .mul(rotate_x(0.25 + Math.cos(t / 1000) / 256))
+        .mul(rotate_y(current_rotation))
+        .mul(translate(0, -12, 0))
     );
 
     let view = camera.inv();
