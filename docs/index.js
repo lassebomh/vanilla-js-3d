@@ -1,3 +1,5 @@
-import { text_3d } from "./scenes.js";
+import * as scenes from "./scenes.js";
 
-text_3d();
+// scenes.text_3d();
+scenes.extrude_test();
+// scenes.box_test();

@@ -23,17 +23,30 @@ export class Matrix extends Float32Array {
   get x() {
     return this[0];
   }
+  set x(value) {
+    /** @type {any} */ (this)[0] = value;
+  }
 
   get y() {
     return this[1];
+  }
+  set y(value) {
+    /** @type {any} */ (this)[1] = value;
   }
 
   get z() {
     return this[2];
   }
+  set z(value) {
+    /** @type {any} */ (this)[2] = value;
+  }
 
   get w() {
     return this[3];
+  }
+
+  set w(value) {
+    /** @type {any} */ (this)[3] = value;
   }
 
   copy() {
@@ -46,6 +59,19 @@ export class Matrix extends Float32Array {
    * @returns {Matrix<T, T>}
    */
   static identity(size) {
+    const out = new Matrix(size, size);
+    for (let i = 0; i < size; i++) {
+      out[i + i * size] = 1;
+    }
+    return out;
+  }
+
+  /**
+   * @template {number} T
+   * @param {T} size
+   * @returns {Matrix<T, T>}
+   */
+  static zero(size) {
     const out = new Matrix(size, size);
     for (let i = 0; i < size; i++) {
       out[i + i * size] = 1;
@@ -457,4 +483,13 @@ export function translate(x, y, z) {
  */
 export function scale(x, y, z) {
   return new Matrix(4, 4, [x, 0, 0, 0, 0, y, 0, 0, 0, 0, z, 0, 0, 0, 0, 1]);
+}
+
+/**
+ * @param {Matrix<1, 4>} a
+ * @param {Matrix<1, 4>} b
+ * @param {Matrix<1, 4>} c
+ */
+export function surface_vector(a, b, c) {
+  return b.sub(a).cross(c.sub(a)).normalize();
 }

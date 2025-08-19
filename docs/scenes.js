@@ -5,11 +5,18 @@ import {
   translate,
   rotate_x,
   rotate_y,
-  rotate_z,
   hsl_to_rgb,
   scale,
+  surface_vector,
 } from "./mat.js";
-import { unit_box, Mesh, text_to_points, TextMeshHandler } from "./mesh.js";
+import {
+  unit_box,
+  Mesh,
+  text_to_points,
+  TextMeshHandler,
+  char_points,
+  text_to_points_unit,
+} from "./mesh.js";
 import { create_canvas, render_to_canvas } from "./render.js";
 import { fail, sleep } from "./utils.js";
 
@@ -113,21 +120,17 @@ export function text_3d() {
   (async () => {
     /** @type {string | undefined} */
     let last_char;
-    if (last_char !== undefined) {
-      for (let i = 0; i < 5; i++) {
-        await sleep(50);
-        text_mesh_handler.add_char(" ");
-      }
-    }
 
-    // for (const char of "bomh.net".toUpperCase().split("")) {
-    for (const char of "hello world!<<<<<<<<<<<<welcome to bomh.net".toUpperCase().split("")) {
+    for (const char of "hello world!| welcome to bomh.net".toUpperCase().split("")) {
       if (char === "<") {
         if (last_char !== "<") {
           await sleep(1200);
         }
         text_mesh_handler.delete_last_char();
         await sleep(100);
+      }
+      if (char === "|") {
+        await sleep(2000);
       } else {
         if (last_char === "<") {
           await sleep(1200);
@@ -136,7 +139,7 @@ export function text_3d() {
         if (char === " ") {
           await sleep(300);
         } else {
-          await sleep(100);
+          await sleep(150);
         }
       }
 
@@ -145,7 +148,7 @@ export function text_3d() {
 
     char_limit = 8;
 
-    await sleep(3000);
+    await sleep(5000);
 
     char_limit = 18;
   })();
@@ -167,7 +170,7 @@ export function text_3d() {
     }
   });
 
-  const cursor = unit_box();
+  const cursor = scale(0.5, 7, 0.5).apply(unit_box());
 
   let current_rotation = 0;
 
@@ -194,13 +197,13 @@ export function text_3d() {
       }
     }
 
-    current_rotation += (text_mesh_handler.current_angle - current_rotation) / 4;
+    current_rotation += (text_mesh_handler.current_angle - current_rotation) / 16;
 
     let camera = scale(window.innerWidth < 500 ? 1.2 : 1, 1, 1).mul(
-      translate(0, 0, text_mesh_handler.distance_from_center + 30)
+      translate(0, 0, -(text_mesh_handler.distance_from_center + 30))
         .mul(rotate_x(0.2 + Math.cos(t / 1000) / 256))
-        .mul(rotate_y(current_rotation + 0.55))
-        .mul(translate(0, -4, 0))
+        .mul(rotate_y(current_rotation + 0.55 - Math.PI))
+        .mul(translate(0, 4, 0))
     );
 
     let view = camera.inv();
@@ -217,8 +220,7 @@ export function text_3d() {
     if (text_mesh_handler.show_cursor) {
       meshes.push(
         new Mesh(
-          scale(0.25, 7, 0.5)
-            .mul(translate(0, 0, text_mesh_handler.distance_from_center))
+          translate(0, 0, text_mesh_handler.distance_from_center)
             .mul(rotate_y(text_mesh_handler.current_angle))
             .apply(cursor),
           [127, 127, 127]
@@ -226,7 +228,7 @@ export function text_3d() {
       );
     }
 
-    render_to_canvas(ctx, meshes, view_projection, light_direction_inv);
+    render_to_canvas(ctx, meshes, view_projection, light_direction_inv, false);
 
     requestAnimationFrame(frame);
   }
@@ -236,31 +238,171 @@ export function text_3d() {
 export function box_test() {
   const ctx = create_canvas("0", "0", "100%", "100%", 1);
 
-  const projection = perspective(deg_to_rad(90), ctx.canvas.width / ctx.canvas.height, 1, 2000);
-
-  const camera = Matrix.identity(4);
+  const projection = perspective(deg_to_rad(45), ctx.canvas.width / ctx.canvas.height, 1, 2000);
 
   const light_direction = Matrix.forward.mul(rotate_x(Math.PI / 4)).mul(rotate_y(Math.PI / 4));
   const light_direction_inv = light_direction.neg();
+
+  const surface = [
+    new Matrix(1, 4, [0, 0, 1, 1]),
+    new Matrix(1, 4, [0, 1, 0, 1]),
+    new Matrix(1, 4, [1, 0, 0, 1]),
+  ];
+
+  /** @type {Mesh[]} */
+  let meshes = [new Mesh(unit_box(), [200, 0, 0])];
 
   /**
    * @param {number} t
    */
   function frame(t) {
-    const ship_angle = t / 1000;
-
-    let ship = new Mesh(unit_box(), [255, 0, 0]).apply(
-      translate(-0.5, -0.5, -0.5),
-      translate(0, -4, -5),
-      rotate_z(ship_angle)
-    );
-
-    let meshes = [ship];
+    const camera = translate(0, 0, 5).mul(rotate_y(t / 1000));
 
     let view = camera.inv();
     let view_projection = view.mul(projection);
 
     render_to_canvas(ctx, meshes, view_projection, light_direction_inv);
+
+    requestAnimationFrame(frame);
+  }
+  frame(performance.now());
+}
+/**
+ *
+ * @param {Matrix<1,4>} a0
+ * @param {Matrix<1,4>} a1
+ * @param {Matrix<1,4>} b0
+ * @param {Matrix<1,4>} b1
+ */
+function connect_edges(a0, a1, b0, b1) {
+  return [a0.copy(), b0.copy(), a1.copy(), a1.copy(), b0.copy(), b1.copy()];
+}
+
+/**
+ * @param {Matrix<1, 4>[]} points
+ * @param {number} length
+ */
+function extrude_point_surface(points, length) {
+  /** @type {Matrix<1, 4>[]} */
+  const side = [];
+
+  const [p0, p1, p2] = points.slice(0, 3);
+  const surface = surface_vector(p0, p1, p2);
+  const offset = surface.div(1 / length);
+  const top = points.map((x) => x.copy().add(offset));
+
+  for (let i = 0; i < points.length; i += 1) {
+    const index_0 = i % points.length;
+    const index_1 = (i + 1) % points.length;
+    const a0 = points[index_0];
+    const a1 = points[index_1];
+    const b1 = top[index_0];
+    const b0 = top[index_1];
+
+    side.push(a0, a1, b0);
+    side.push(b0, b1, a0);
+  }
+
+  // return [...top.map((x) => x.add(offset)), ...side, ...points.toReversed()];
+  return [...top, ...side, ...points.toReversed()];
+}
+
+export function extrude_test() {
+  const ctx = create_canvas("0", "0", "100%", "100%", 1);
+  const container = ctx.canvas.parentElement ?? fail();
+
+  const char_projection = perspective(deg_to_rad(30), 1, 30, 100);
+
+  const chars = Object.fromEntries(
+    char_points.map(([char, bitmap]) => {
+      const char_model_data = text_to_points_unit(bitmap.split("\n"));
+
+      char_model_data.trigs = char_projection.apply(
+        translate(-(char_model_data.width / 2), -(char_model_data.height / 2), -8).apply(
+          char_model_data.trigs.toReversed()
+        )
+      );
+
+      return [char, char_model_data];
+    })
+  );
+
+  let pitch = 0;
+  let yaw = 0;
+
+  window.addEventListener("mousemove", (e) => {
+    yaw = (e.clientX / window.innerWidth - 0.5) * -Math.PI * 2;
+    pitch = (e.clientY / window.innerHeight - 0.5) * -Math.PI * 2;
+  });
+
+  const input = document.createElement("input");
+  input.type = "text";
+  input.style.position = "absolute";
+  input.style.inset = "0";
+  input.style.opacity = "0";
+  container.appendChild(input);
+
+  const camera_projection = perspective(
+    deg_to_rad(30),
+    ctx.canvas.width / ctx.canvas.height,
+    1,
+    2000
+  );
+
+  /** @type {Mesh[]} */
+  let meshes = [];
+
+  let total_width = 0;
+  let target_angle = 0;
+  let current_angle = 0;
+
+  /** @type {number[]} */
+  const widths = [];
+
+  /**
+   * @param {string} char
+   */
+  function add_char(char) {
+    const { width, height, trigs } = chars[char];
+
+    const mesh = new Mesh(rotate_y(target_angle).apply(trigs), [255, 0, 0]);
+    total_width += width + 1;
+    target_angle = -total_width / 20;
+    console.log(total_width);
+
+    widths.push(width);
+    meshes.push(mesh);
+  }
+
+  input.value = " ".repeat(100);
+  input.addEventListener("input", (e) => {
+    const event = /** @type {InputEvent} */ (e);
+    if (event.inputType === "deleteContentBackward") {
+      const width = widths.pop();
+      if (width === undefined) return;
+      total_width -= width + 1;
+      target_angle = -total_width / 20;
+      meshes.pop();
+      console.log(target_angle);
+    } else if (event.inputType === "insertText") {
+      add_char((event.data ?? fail()).toUpperCase());
+    }
+  });
+
+  /**
+   * @param {number} t
+   */
+  function frame(t) {
+    current_angle += (target_angle - current_angle) / 16;
+    const camera = translate(0, 0, -50).mul(rotate_x(pitch).mul(rotate_y(yaw)));
+
+    let view = camera.inv();
+    let view_projection = view.mul(camera_projection);
+
+    const light_direction = Matrix.forward.mul(rotate_y(current_angle).mul(rotate_x(0.4)));
+    const light_direction_inv = light_direction.neg();
+
+    render_to_canvas(ctx, meshes, view_projection, light_direction_inv, true);
 
     requestAnimationFrame(frame);
   }

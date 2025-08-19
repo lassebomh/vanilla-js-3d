@@ -39,17 +39,17 @@ export class Mesh {
  */
 export function quad() {
   return [
+    new Matrix(1, 4, [0, 0, 0, 1]),
+    new Matrix(1, 4, [0, 1, 0, 1]),
+    new Matrix(1, 4, [1, 0, 0, 1]),
+    new Matrix(1, 4, [1, 0, 0, 1]),
     new Matrix(1, 4, [0, 1, 0, 1]),
     new Matrix(1, 4, [1, 1, 0, 1]),
-    new Matrix(1, 4, [0, 0, 0, 1]),
-    new Matrix(1, 4, [0, 0, 0, 1]),
-    new Matrix(1, 4, [1, 1, 0, 1]),
-    new Matrix(1, 4, [1, 0, 0, 1]),
   ];
 }
 
 export function unit_box() {
-  const transl = translate(-0.5, -0.5, 0.5);
+  const transl = translate(-0.5, -0.5, -0.5);
   const q = transl.apply(quad());
   return transl
     .inv()
@@ -87,13 +87,13 @@ export function text_to_points(text) {
 }
 
 /**
- * @param {string} text
+ * @param {string[]} text
  */
 export function text_to_points_unit(text) {
   /** @type {Matrix<1,4>[]} */
-  const points = [];
+  const trigs = [];
 
-  const pixels = text.split("\n").map((x) => x.split("").map((y) => y === "#"));
+  const pixels = text.map((x) => x.split("").map((y) => y === "#"));
 
   const height = pixels.length;
   const width = pixels[0].length;
@@ -101,12 +101,55 @@ export function text_to_points_unit(text) {
   for (let x = 0; x < width; x++) {
     for (let y = 0; y < height; y++) {
       if (pixels[y][x]) {
-        points.push(...translate(x, height - y, 0).apply(unit_box()));
+        trigs.push(...translate(width - x, y, 0).apply(unit_box()));
       }
     }
   }
 
-  return points;
+  return {
+    trigs: filter_colliding_quads(trigs),
+    width,
+    height,
+  };
+}
+
+/**
+ * @param {Matrix<1, 4>[]} points
+ */
+export function filter_colliding_quads(points) {
+  /** @type {Map<string, number>} */
+  const map = new Map();
+  const duplicates = new Array(points.length).fill(false);
+
+  for (let i = 0; i < points.length; i += 6) {
+    const a = points[i];
+    const b = points[i + 1];
+    const c = points[i + 2];
+    const d = points[i + 5];
+
+    const center = a.add(b).add(c).add(d).div(4);
+
+    const key = `${center.x.toFixed(2)},${center.y.toFixed(2)},${center.z.toFixed(2)}`;
+
+    const existing_index = map.get(key);
+    if (existing_index !== undefined) {
+      duplicates[i] = true;
+      duplicates[existing_index] = true;
+    } else {
+      map.set(key, i);
+    }
+  }
+
+  /** @type {Matrix<1,4>[]} */
+  const out = [];
+
+  for (let i = 0; i < points.length; i += 6) {
+    if (!duplicates[i]) {
+      out.push(...points.slice(i, i + 6));
+    }
+  }
+
+  return out;
 }
 
 export function model_box() {
@@ -187,8 +230,8 @@ export class TextMeshHandler {
   constructor() {
     for (const [char, text] of Object.entries(char_points)) {
       this.char_data[char] = {
-        width: text.split("\n")[0].length,
-        points: text_to_points_unit(text),
+        width: text[0].length,
+        points: text_to_points_unit(text).trigs,
       };
     }
   }
@@ -234,8 +277,7 @@ export class TextMeshHandler {
   }
 }
 
-/** @type {Record<string, string>} */
-const char_points = Object.fromEntries([
+export const char_points = [
   [
     "A",
     `\
@@ -616,4 +658,4 @@ const char_points = Object.fromEntries([
    #
  ## `,
   ],
-]);
+];
