@@ -159,22 +159,22 @@ export class Matrix extends Float32Array {
    * @returns {Matrix<H, W>}
    */
   add(other) {
-    return new Matrix(
-      this.height,
-      this.width,
-      new Float32Array(this).map((v, i) => v + other[i])
-    );
+    const array = new Float32Array(this);
+    for (let i = 0; i < array.length; i++) {
+      array[i] += other[i];
+    }
+    return new Matrix(this.height, this.width, array);
   }
 
   /**
    * @returns {Matrix<H, W>}
    */
   neg() {
-    return new Matrix(
-      this.height,
-      this.width,
-      new Float32Array(this).map((v) => -v)
-    );
+    const array = new Float32Array(this);
+    for (let i = 0; i < array.length; i++) {
+      array[i] *= -1;
+    }
+    return new Matrix(this.height, this.width, array);
   }
 
   normalize() {
@@ -187,11 +187,11 @@ export class Matrix extends Float32Array {
    * @returns {Matrix<H, W>}
    */
   div(value) {
-    return new Matrix(
-      this.height,
-      this.width,
-      new Float32Array(this).map((v) => v / value)
-    );
+    const array = new Float32Array(this);
+    for (let i = 0; i < array.length; i++) {
+      array[i] /= value;
+    }
+    return new Matrix(this.height, this.width, array);
   }
 
   /**
@@ -199,11 +199,11 @@ export class Matrix extends Float32Array {
    * @returns {Matrix<H, W>}
    */
   sub(other) {
-    return new Matrix(
-      this.height,
-      this.width,
-      Array.from(this).map((v, i) => v - other[i])
-    );
+    const array = new Float32Array(this);
+    for (let i = 0; i < array.length; i++) {
+      array[i] -= other[i];
+    }
+    return new Matrix(this.height, this.width, array);
   }
 
   /**

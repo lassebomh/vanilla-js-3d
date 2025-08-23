@@ -1,4 +1,4 @@
-import { Matrix, pos_to_screen, hsl_to_rgb, cross_product } from "./mat.js";
+import { Matrix, pos_to_screen, cross_product } from "./mat.js";
 import { Mesh } from "./mesh.js";
 import { never } from "./utils.js";
 /** @typedef {{pos: [Matrix<1, 4>, Matrix<1, 4>, Matrix<1, 4>], color: [number, number, number], light: number, surface: Matrix<1, 4>, proj: [Matrix<1, 4>, Matrix<1, 4>, Matrix<1, 4>], z: number, i: number}} TrigData */
